@@ -9,6 +9,7 @@
 
 package com.dhiraj.myapi_backend.config;
 
+import com.dhiraj.myapi_backend.interceptor.RateLimitingInterceptor;
 import com.dhiraj.myapi_backend.interceptor.RequestLoggingInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -21,8 +22,13 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Autowired
     private RequestLoggingInterceptor loggingInterceptor;
 
+    @Autowired
+    private RateLimitingInterceptor rateLimitingInterceptor;
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(rateLimitingInterceptor)
+                        .addPathPatterns("/**");
         registry.addInterceptor(loggingInterceptor)
                 .addPathPatterns("/**"); // Apply to all endpoints
     }
