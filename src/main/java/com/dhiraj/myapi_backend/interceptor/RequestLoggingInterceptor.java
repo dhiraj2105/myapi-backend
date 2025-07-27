@@ -8,6 +8,7 @@ package com.dhiraj.myapi_backend.interceptor;
 
 import com.dhiraj.myapi_backend.model.ApiLog;
 import com.dhiraj.myapi_backend.repository.ApiLogRepository;
+import com.dhiraj.myapi_backend.service.LogStreamService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,9 @@ import java.time.Instant;
 public class RequestLoggingInterceptor implements HandlerInterceptor {
     @Autowired
     private ApiLogRepository logRepository;
+
+    @Autowired
+    private LogStreamService streamService;
 
     // Called BEFORE the controller handles the request
     @Override
@@ -52,6 +56,8 @@ public class RequestLoggingInterceptor implements HandlerInterceptor {
                 .build();
 
         logRepository.save(log);
+        // send log to frontend if sse client connected
+        streamService.sendLog(log);
 
         System.out.printf("[SAVED] %s %s (%d) [%dms] Limit: %s%n",
                 log.getMethod(), log.getUri(), log.getStatus(), log.getResponseTimeMs(),
