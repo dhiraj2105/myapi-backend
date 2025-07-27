@@ -1,11 +1,8 @@
 // ==========================================================================
 // File: ApiLog.java
 // Purpose: MongoDB document representing one API request log.
-// Approach:
-//   - Captures essential metadata: timestamp, URI, method, IP, status, etc.
-//   - Mapped to 'api_logs' collection in MongoDB.
 // Changes:
-//   - [Init] Created API log document schema.
+//   - [Added] rateLimitExceeded boolean flag to track blocked requests.
 // ==========================================================================
 
 package com.dhiraj.myapi_backend.model;
@@ -35,4 +32,6 @@ public class ApiLog {
 
     private int status;
     private long responseTimeMs;
+
+    private boolean rateLimitExceeded;
 }

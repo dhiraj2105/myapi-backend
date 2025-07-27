@@ -2,7 +2,7 @@
 // File: RequestLoggingInterceptor.java
 // Purpose: Intercepts all incoming requests, logs to MongoDB via ApiLogRepository.
 // Changes:
-//   - [Added] MongoDB persistence via injected ApiLogRepository.
+//   - [Added] Reads rateLimitExceeded flag from request attributes.
 // ==========================================================================
 package com.dhiraj.myapi_backend.interceptor;
 
@@ -34,6 +34,12 @@ public class RequestLoggingInterceptor implements HandlerInterceptor {
         long startTime = (Long) request.getAttribute("startTime");
         long duration = System.currentTimeMillis() - startTime;
 
+        boolean rateLimited = false;
+        Object attr = request.getAttribute("rateLimitExceeded");
+        if (attr != null && attr instanceof Boolean) {
+            rateLimited = (Boolean) attr;
+        }
+
         ApiLog log = ApiLog.builder()
                 .timestamp(Instant.now())
                 .method(request.getMethod())
@@ -42,10 +48,13 @@ public class RequestLoggingInterceptor implements HandlerInterceptor {
                 .userAgent(request.getHeader("User-Agent"))
                 .status(response.getStatus())
                 .responseTimeMs(duration)
+                .rateLimitExceeded(rateLimited)
                 .build();
 
         logRepository.save(log);
 
-        System.out.printf("[SAVED] %s %s (%d) [%dms]%n", log.getMethod(), log.getUri(), log.getStatus(), log.getResponseTimeMs());
+        System.out.printf("[SAVED] %s %s (%d) [%dms] Limit: %s%n",
+                log.getMethod(), log.getUri(), log.getStatus(), log.getResponseTimeMs(),
+                log.isRateLimitExceeded());
     }
 }

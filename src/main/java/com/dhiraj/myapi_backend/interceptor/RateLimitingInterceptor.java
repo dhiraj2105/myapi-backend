@@ -5,7 +5,7 @@
 //   - Uses a ConcurrentHashMap to store buckets per IP.
 //   - Applies a simple fixed window algorithm.
 // Changes:
-//   - [Init] Implemented IP-based in-memory rate limiter.
+//   - [Added] Sets rateLimitExceeded=true if blocked.
 // ==========================================================================
 
 package com.dhiraj.myapi_backend.interceptor;
@@ -34,12 +34,14 @@ public class RateLimitingInterceptor implements HandlerInterceptor {
         RateLimitBucket bucket = buckets.computeIfAbsent(ip, k -> new RateLimitBucket(REQUEST_LIMIT, WINDOW_MS));
 
         if (!bucket.allowRequest()) {
+            request.setAttribute("rateLimitExceeded", true); // pass to logger
             response.setStatus(429);
             response.getWriter().write("Too many requests. Please try again later.");
             System.out.printf("[RATE LIMIT] Blocked IP %s%n", ip);
             return false;
         }
 
+        request.setAttribute("rateLimitExceeded", false);
         return true;
     }
 }
