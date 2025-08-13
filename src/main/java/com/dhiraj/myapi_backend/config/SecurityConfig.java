@@ -1,11 +1,9 @@
-// ==========================================================================
+// ==================================================
 // File: SecurityConfig.java
-// Purpose: Configure JWT-based Spring Security for authentication.
-// Approach:
-//   - Disable sessions
-//   - Add JWT filter before request
-//   - Permit /auth/** and block others
-// ==========================================================================
+// Purpose: Enable CORS + JWT security chain.
+// Changes:
+//  - [Finish] Configure JSON 401/403 handlers.
+// ==================================================
 
 package com.dhiraj.myapi_backend.config;
 
@@ -17,7 +15,9 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.*;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
@@ -31,11 +31,18 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
-                                           JwtAuthenticationFilter jwtFilter) throws Exception {
+                                           JwtAuthenticationFilter jwtFilter,
+                                           AuthenticationEntryPoint jsonEntryPoint,
+                                           AccessDeniedHandler jsonDeniedHandler) throws Exception {
 
         return http
+                .cors(cors -> {})
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(eh -> eh
+                        .authenticationEntryPoint(jsonEntryPoint)   // 401 JSON. //
+                        .accessDeniedHandler(jsonDeniedHandler)     // 403 JSON. //
+                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
                         .anyRequest().authenticated()
