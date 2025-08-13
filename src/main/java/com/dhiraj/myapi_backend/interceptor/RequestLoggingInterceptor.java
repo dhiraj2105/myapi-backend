@@ -2,13 +2,14 @@
 // File: RequestLoggingInterceptor.java
 // Purpose: Intercepts all incoming requests, logs to MongoDB via ApiLogRepository.
 // Changes:
-//   - [Added] Reads rateLimitExceeded flag from request attributes.
+//   - [Finish] Sanitize User-Agent to avoid oversized values.
 // ==========================================================================
 package com.dhiraj.myapi_backend.interceptor;
 
 import com.dhiraj.myapi_backend.model.ApiLog;
 import com.dhiraj.myapi_backend.repository.ApiLogRepository;
 import com.dhiraj.myapi_backend.service.LogStreamService;
+import com.dhiraj.myapi_backend.util.LogSanitizer;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,12 +45,14 @@ public class RequestLoggingInterceptor implements HandlerInterceptor {
             rateLimited = (Boolean) attr;
         }
 
+        String ua = LogSanitizer.sanitizeUserAgent(request.getHeader("User-Agent")); // Sanitize UA. //
+
         ApiLog log = ApiLog.builder()
                 .timestamp(Instant.now())
                 .method(request.getMethod())
                 .uri(request.getRequestURI())
                 .ip(request.getRemoteAddr())
-                .userAgent(request.getHeader("User-Agent"))
+                .userAgent(ua)
                 .status(response.getStatus())
                 .responseTimeMs(duration)
                 .rateLimitExceeded(rateLimited)
