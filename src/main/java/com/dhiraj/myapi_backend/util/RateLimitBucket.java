@@ -1,42 +1,43 @@
-// ==========================================================================
+// ==================================================
 // File: RateLimitBucket.java
-// Purpose: Represents a rate limit window for a client/IP.
-// Approach:
-//   - Tracks request count and window start time.
-//   - Resets automatically after window expires.
+// Purpose: Fixed-window bucket used by rate limiter.
 // Changes:
-//   - [Init] Created fixed window rate limit bucket.
-// ==========================================================================
+//  - [Finish] Added getters for limit/window to support dynamic re-init.
+// ==================================================
 
 package com.dhiraj.myapi_backend.util;
 
+import lombok.Getter;
+
 public class RateLimitBucket {
-    private int requestCount;
-    private long windowStart;
+    private int requestCount; // Current count in window. //
+    private long windowStart; // Window start timestamp (ms). //
 
-    private final int limit;
-    private final long windowSizeMs;
+    // Expose limit. //
+    @Getter
+    private final int limit; // Max requests per window. //
+    // Expose window size. //
+    @Getter
+    private final long windowSizeMs; // Window duration in ms. //
 
-    public RateLimitBucket(int limit, long windowSizeMs){
-        this.limit = limit;
-        this.windowSizeMs = windowSizeMs;
-        this.windowStart = System.currentTimeMillis();
-        this.requestCount = 0;
+    public RateLimitBucket(int limit, long windowSizeMs) { // Constructor. //
+        this.limit = limit; // Set limit. //
+        this.windowSizeMs = windowSizeMs; // Set window size. //
+        this.windowStart = System.currentTimeMillis(); // Init start time. //
+        this.requestCount = 0; // Init count. //
     }
 
-    public synchronized boolean allowRequest(){
-        long now = System.currentTimeMillis();
-
-//        check if window expired
-        if(now - windowStart >= windowSizeMs){
-            windowStart = now;
-            requestCount = 0;
+    public synchronized boolean allowRequest() { // Thread-safe allowance check. //
+        long now = System.currentTimeMillis(); // Current time. //
+        if (now - windowStart >= windowSizeMs) { // If window expired. //
+            windowStart = now; // Reset start. //
+            requestCount = 0; // Reset count. //
         }
-        if(requestCount < limit){
-            requestCount++;
-            return true;
-        }else{
-            return false;
+        if (requestCount < limit) { // Under quota? //
+            requestCount++; // Consume a token. //
+            return true; // Allow. //
         }
+        return false; // Deny. //
     }
+
 }
